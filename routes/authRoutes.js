@@ -7,13 +7,14 @@ import {
   profile,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
+import rateLimiter from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 router.post("/register", register);
-router.post("/login", login);
+router.post("/login", rateLimiter, login);
 router.get("/profile", authMiddleware, profile);
 router.post("/logout", logout);
-router.post("/refresh", refreshToken);
+router.post("/refresh", rateLimiter, refreshToken);
 
 export default router;
