@@ -85,8 +85,8 @@ export const login = async (req, res) => {
       });
     }
 
-    const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id);
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
@@ -129,8 +129,8 @@ export const refreshToken = async (req, res) => {
       });
     }
 
-    const newAccessToken = generateAccessToken(user._id);
-    const newRefreshToken = generateRefreshToken(user._id);
+    const newAccessToken = generateAccessToken(user);
+    const newRefreshToken = generateRefreshToken(user);
 
     res.cookie("refreshToken", newRefreshToken, {
       httpOnly: true,
