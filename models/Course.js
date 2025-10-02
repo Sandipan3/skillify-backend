@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { set } from "mongoose";
 
 const courseSchema = new mongoose.Schema(
   {
@@ -45,10 +45,10 @@ const courseSchema = new mongoose.Schema(
         },
       },
     ],
-
     price: {
       type: Number,
       default: 0,
+      set: (value) => Number(parseFloat(value).toFixed(2)),
     },
   },
   { timestamps: true }
