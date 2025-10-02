@@ -10,7 +10,7 @@ export const register = async (req, res) => {
   const { name, email, password, role } = req.body;
 
   if (!name || !email || !password || !role) {
-    return res.status(403).json({
+    return res.status(400).json({
       status: "error",
       message: "fields cannot be empty",
     });
@@ -22,7 +22,7 @@ export const register = async (req, res) => {
         password
       )
     ) {
-      return res.status(403).json({
+      return res.status(400).json({
         status: "error",
         message:
           "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.",
@@ -31,7 +31,7 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(403).json({
+      return res.status(400).json({
         status: "error",
         message: "A user with this email already exists.",
       });
@@ -61,7 +61,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(403).json({
+    return res.status(400).json({
       status: "error",
       message: "fields cannot be empty",
     });
@@ -71,7 +71,7 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         status: "error",
         message: "User with the email does not exist",
       });
@@ -123,7 +123,7 @@ export const refreshToken = async (req, res) => {
     const user = await User.findById(decoded.userId);
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         status: "error",
         message: "User not found",
       });
@@ -173,7 +173,7 @@ export const profile = async (req, res) => {
     const user = await User.findById(req.user.userId).select("-password");
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(404).json({
         status: "error",
         message: "User not found",
       });

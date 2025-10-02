@@ -1,10 +1,10 @@
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";
+import courseRoutes from "./routes/courseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
-
 import cookieParser from "cookie-parser";
-import connectDB from "./utils/connectDb.js";
+import connectDB from "./config/connectDb.js";
 
 // app setup
 const app = express();
@@ -33,5 +33,6 @@ connectDB();
 
 //routes
 app.use("/api/v1", authRoutes);
+app.use("/api/v1/course", courseRoutes);
 
 export default app;
