@@ -3,6 +3,7 @@ import morgan from "morgan";
 import cors from "cors";
 import courseRoutes from "./routes/courseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDb.js";
 
@@ -34,5 +35,6 @@ connectDB();
 //routes
 app.use("/api/v1", authRoutes);
 app.use("/api/v1/course", courseRoutes);
+app.use("/api/v1/enrollment", enrollmentRoutes);
 
 export default app;
