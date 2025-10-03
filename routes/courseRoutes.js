@@ -5,6 +5,8 @@ import {
   deleteCourse,
   deleteVideo,
   getAllCourses,
+  getCourseById,
+  getInstructorCourses,
   updateCourse,
 } from "../controllers/courseController.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
@@ -22,8 +24,15 @@ router.post(
 );
 
 router.get("/", getAllCourses);
+
+router.get("/my-courses", allowedRoles("instructor"), getInstructorCourses);
+
+router.get("/:id", allowedRoles("instructor"), getCourseById);
+
 router.put("/:id", allowedRoles("instructor"), uploadMiddleware, updateCourse);
+
 router.delete("/:id", allowedRoles("instructor"), deleteCourse);
+
 router.delete(
   "/:courseId/videos/:videoId",
   allowedRoles("instructor"),

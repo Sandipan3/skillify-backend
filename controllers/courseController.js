@@ -306,3 +306,50 @@ export const deleteVideo = async (req, res) => {
     });
   }
 };
+
+//get all courses for a specific instructor
+export const getInstructorCourses = async (req, res) => {
+  try {
+    const instructorId = req.user.userId;
+
+    const courses = await Course.find({ instructor: instructorId })
+      .populate("instructor", "name email")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      status: "success",
+      data: courses,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};
+
+//get a specific course
+export const getCourseById = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id)
+      .populate("instructor", "name email")
+      .populate("enrollments", "student enrolledAt");
+
+    if (!course) {
+      return res.status(404).json({
+        status: "error",
+        message: "Course not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: "success",
+      data: course,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: "error",
+      message: error.message,
+    });
+  }
+};

@@ -97,6 +97,7 @@ export const getEnrollmentCount = async (req, res) => {
   }
 };
 
+//unenroll
 export const unenrollCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
