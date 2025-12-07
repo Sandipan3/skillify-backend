@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import Course from "../models/Course.js";
 import dotenv from "dotenv";
+import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
+
 dotenv.config();
 
 // Configure Cloudinary
@@ -16,57 +18,33 @@ export const createCourse = async (req, res) => {
   const instructor = req.user.userId;
 
   if (!title || !description) {
-    return res.status(400).json({
-      status: "error",
-      message: "Title and description are required",
-    });
+    return sendErrorResponse(res, "Title and description are required", 400);
   }
 
   if (!req.files?.thumbnail) {
-    return res.status(400).json({
-      status: "error",
-      message: "Thumbnail is required",
-    });
+    return sendErrorResponse(res, "Thumbnail is required", 400);
   }
 
-  if (!req.files?.videos) {
-    return res.status(400).json({
-      status: "error",
-      message: "At least one video is required",
-    });
+  if (!req.files?.videos || req.files.videos.length === 0) {
+    return sendErrorResponse(res, "At least one video is required", 400);
   }
 
   try {
-    // Upload thumbnail using upload_stream
     const thumbnailResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: "skillify-thumbnails",
-          resource_type: "image",
-        },
-        (error, result) => {
-          error ? reject(error) : resolve(result);
-        }
+        { folder: "skillify-thumbnails", resource_type: "image" },
+        (error, result) => (error ? reject(error) : resolve(result))
       );
-      // Send the buffer directly to Cloudinary
       uploadStream.end(req.files.thumbnail[0].buffer);
     });
 
-    // Upload videos using upload_stream (NO BASE64)
     let videos = [];
-    for (let i = 0; i < req.files.videos.length; i++) {
-      const video = req.files.videos[i];
+    for (let video of req.files.videos) {
       const videoResult = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "skillify-videos",
-            resource_type: "video",
-          },
-          (error, result) => {
-            error ? reject(error) : resolve(result);
-          }
+          { folder: "skillify-videos", resource_type: "video" },
+          (error, result) => (error ? reject(error) : resolve(result))
         );
-        // Send the buffer directly to Cloudinary
         uploadStream.end(video.buffer);
       });
 
@@ -77,7 +55,6 @@ export const createCourse = async (req, res) => {
       });
     }
 
-    // Create course
     const course = new Course({
       title,
       description,
@@ -90,15 +67,9 @@ export const createCourse = async (req, res) => {
     await course.save();
     await course.populate("instructor", "name");
 
-    res.status(201).json({
-      status: "success",
-      data: course,
-    });
+    return sendSuccessResponse(res, { course }, 201);
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Course creation failed", 500);
   }
 };
 
@@ -109,62 +80,46 @@ export const getAllCourses = async (req, res) => {
       .populate("instructor", "name email")
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({
-      status: "success",
-      data: courses,
-    });
+    return sendSuccessResponse(res, { courses }, 200);
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };
 
-//update route
+//update course
 export const updateCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
 
     if (!course) {
-      return res.status(404).json({
-        status: "error",
-        message: "Course not found",
-      });
+      return sendErrorResponse(res, "Course not found", 404);
     }
 
     if (course.instructor.toString() !== req.user.userId) {
-      return res.status(403).json({
-        status: "error",
-        message: "Not authorized to update this course",
-      });
+      return sendErrorResponse(
+        res,
+        "Not authorized to update this course",
+        403
+      );
     }
 
     const { title, description, price } = req.body;
 
     //thumbnail update
     if (req.files?.thumbnail) {
-      //delete old thumbnail
       if (course.thumbnail) {
-        //https://res.cloudinary.com/dzqhdeoac/image/upload/v1759315135/skillify-thumbnails/nnpgxktksfn2fa1eap4r.png
-        //publicId = nnpgxktksfn2fa1eap4r
         const publicId = course.thumbnail.split("/").pop().split(".")[0];
         await cloudinary.uploader.destroy(`skillify-thumbnails/${publicId}`);
       }
 
-      //upload new thumbnail
       const thumbnailResult = await new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          {
-            folder: "skillify-thumbnails",
-            resource_type: "image",
-          },
-          (error, result) => {
-            error ? reject(error) : resolve(result);
-          }
+          { folder: "skillify-thumbnails", resource_type: "image" },
+          (error, result) => (error ? reject(error) : resolve(result))
         );
         uploadStream.end(req.files.thumbnail[0].buffer);
       });
+
       course.thumbnail = thumbnailResult.secure_url;
     }
 
@@ -173,13 +128,8 @@ export const updateCourse = async (req, res) => {
       for (let video of req.files.videos) {
         const videoResult = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
-            {
-              folder: "skillify-videos",
-              resource_type: "video",
-            },
-            (error, result) => {
-              error ? reject(error) : resolve(result);
-            }
+            { folder: "skillify-videos", resource_type: "video" },
+            (error, result) => (error ? reject(error) : resolve(result))
           );
           uploadStream.end(video.buffer);
         });
@@ -192,7 +142,6 @@ export const updateCourse = async (req, res) => {
       }
     }
 
-    //update text fields
     if (title) course.title = title;
     if (description) course.description = description;
     if (price !== undefined) course.price = price;
@@ -200,15 +149,9 @@ export const updateCourse = async (req, res) => {
     await course.save();
     await course.populate("instructor", "name");
 
-    res.status(200).json({
-      status: "success",
-      data: course,
-    });
+    return sendSuccessResponse(res, { course }, 200);
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };
 
@@ -218,43 +161,37 @@ export const deleteCourse = async (req, res) => {
     const course = await Course.findById(req.params.id);
 
     if (!course) {
-      return res.status(404).json({
-        status: "error",
-        message: "Course not found",
-      });
-    }
-    //check for same instructor
-    if (course.instructor.toString() !== req.user.userId) {
-      return res.status(403).json({
-        status: "error",
-        message: "Not authorized to update this course",
-      });
+      return sendErrorResponse(res, "Course not found", 404);
     }
 
-    //delete thumbnail
+    if (course.instructor.toString() !== req.user.userId) {
+      return sendErrorResponse(
+        res,
+        "Not authorized to delete this course",
+        403
+      );
+    }
+
     if (course.thumbnail) {
       const publicId = course.thumbnail.split("/").pop().split(".")[0];
       await cloudinary.uploader.destroy(`skillify-thumbnails/${publicId}`);
     }
 
-    //delete videos
     for (let video of course.videos) {
       await cloudinary.uploader.destroy(video.public_id, {
         resource_type: "video",
       });
     }
 
-    //delete course from mongodb
     await Course.findByIdAndDelete(req.params.id);
-    res.status(200).json({
-      status: "success",
-      message: "Course deleted successfully",
-    });
+
+    return sendSuccessResponse(
+      res,
+      { message: "Course deleted successfully" },
+      200
+    );
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };
 
@@ -266,44 +203,36 @@ export const deleteVideo = async (req, res) => {
     const course = await Course.findById(courseId);
 
     if (!course) {
-      return res.status(404).json({
-        status: "error",
-        message: "Course not found",
-      });
+      return sendErrorResponse(res, "Course not found", 404);
     }
-    //check for same instructor
+
     if (course.instructor.toString() !== req.user.userId) {
-      return res.status(403).json({
-        status: "error",
-        message: "Not authorized to update this course",
-      });
+      return sendErrorResponse(
+        res,
+        "Not authorized to update this course",
+        403
+      );
     }
 
     const video = course.videos.id(videoId);
     if (!video) {
-      return res.status(404).json({
-        status: "error",
-        message: "Video not found in this course",
-      });
+      return sendErrorResponse(res, "Video not found in this course", 404);
     }
 
-    // Delete from Cloudinary
     await cloudinary.uploader.destroy(video.public_id, {
       resource_type: "video",
     });
-    // Remove from course
+
     course.videos.pull(videoId);
     await course.save();
 
-    res.status(200).json({
-      status: "success",
-      message: "Video deleted successfully",
-    });
+    return sendSuccessResponse(
+      res,
+      { message: "Video deleted successfully" },
+      200
+    );
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };
 
@@ -316,15 +245,9 @@ export const getInstructorCourses = async (req, res) => {
       .populate("instructor", "name email")
       .sort({ createdAt: -1 });
 
-    return res.status(200).json({
-      status: "success",
-      data: courses,
-    });
+    return sendSuccessResponse(res, { courses }, 200);
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };
 
@@ -336,20 +259,11 @@ export const getCourseById = async (req, res) => {
       .populate("enrollments", "student enrolledAt");
 
     if (!course) {
-      return res.status(404).json({
-        status: "error",
-        message: "Course not found",
-      });
+      return sendErrorResponse(res, "Course not found", 404);
     }
 
-    return res.status(200).json({
-      status: "success",
-      data: course,
-    });
+    return sendSuccessResponse(res, { course }, 200);
   } catch (error) {
-    return res.status(500).json({
-      status: "error",
-      message: error.message,
-    });
+    return sendErrorResponse(res, "Server Error", 500);
   }
 };

@@ -1,39 +1,26 @@
 import multer from "multer";
 
+// Store files in memory (buffer available in req.file.buffer)
 const storage = multer.memoryStorage();
 
+// Only allow image or PDF
 const fileFilter = (req, file, cb) => {
-  if (file.fieldname === "thumbnail") {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(
-        new Error("Only image files are allowed for course thumbnails!"),
-        false
-      );
-    }
-  } else if (file.fieldname === "videos") {
-    if (file.mimetype.startsWith("video/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only video files are allowed for course videos!"), false);
-    }
+  if (
+    file.mimetype.startsWith("image/") ||
+    file.mimetype === "application/pdf"
+  ) {
+    cb(null, true);
   } else {
-    cb(new Error("Unexpected field"), false);
+    cb(new Error("Only image or PDF files are allowed!"), false);
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  //   limits:{
-  //     fieldSize:
-  //   }
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
 });
 
-export const uploadMiddleware = upload.fields([
-  { name: "thumbnail" },
-  { name: "videos" },
-]);
-
+// Single file (field name: 'file')
+export const uploadMiddleware = upload.single("file");
 export default uploadMiddleware;

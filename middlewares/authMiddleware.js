@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import User from "../models/User.js";
+import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
+
 dotenv.config();
 
 const authMiddleware = async (req, res, next) => {
@@ -9,18 +11,14 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader && authHeader.split(" ")[1];
 
     if (!token) {
-      return res
-        .status(401)
-        .json({ status: "error", message: "No access token" });
+      return sendErrorResponse(res, "No access token", 401);
     }
 
     const decoded = jwt.verify(token, process.env.JWT_KEY);
     const user = await User.findById(decoded.userId).select("name role");
 
     if (!user) {
-      return res
-        .status(404)
-        .json({ status: "error", message: "User not found" });
+      return sendErrorResponse(res, "User not found", 404);
     }
 
     req.user = {
@@ -31,9 +29,7 @@ const authMiddleware = async (req, res, next) => {
 
     next();
   } catch (error) {
-    return res
-      .status(401)
-      .json({ status: "error", message: "Invalid or expired access token" });
+    return sendErrorResponse(res, "Invalid or expired access token", 401);
   }
 };
 

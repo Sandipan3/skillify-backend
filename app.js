@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDb.js";
+import errorMiddleware from "./middlewares/errorMiddleware.js";
 
 // app setup
 const app = express();
@@ -36,5 +37,7 @@ connectDB();
 app.use("/api/v1", authRoutes);
 app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/enrollment", enrollmentRoutes);
+
+app.use(errorMiddleware);
 
 export default app;
