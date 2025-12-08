@@ -18,14 +18,18 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
     },
 
     role: {
       type: String,
-      enum: ["admin", "instructor", "student"],
+      enum: ["admin", "instructor", "student", "user"],
       lowercase: true,
-      default: "student",
+      default: "user",
+    },
+
+    profileCompleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {

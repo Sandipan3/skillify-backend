@@ -34,7 +34,7 @@ app.use(
 connectDB();
 
 //routes
-app.use("/api/v1", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/enrollment", enrollmentRoutes);
 

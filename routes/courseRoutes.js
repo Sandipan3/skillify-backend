@@ -25,9 +25,9 @@ router.post(
 
 router.get("/", getAllCourses);
 
-router.get("/my-courses", allowedRoles("instructor"), getInstructorCourses);
+router.get("/:id", getCourseById);
 
-router.get("/:id", allowedRoles("instructor"), getCourseById);
+router.get("/my-courses", allowedRoles("instructor"), getInstructorCourses);
 
 router.put("/:id", allowedRoles("instructor"), uploadMiddleware, updateCourse);
 

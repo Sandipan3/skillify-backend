@@ -9,9 +9,9 @@ import {
 } from "../controllers/enrollmentController.js";
 const router = express.Router();
 
-router.use(authMiddleware);
-
 router.get("/enrollment-count/:id", getEnrollmentCount);
+
+router.use(authMiddleware);
 
 router.post("/enroll", allowedRoles("student"), enrollInCourse);
 router.get("/my-enrollments", allowedRoles("student"), getMyEnrollments);
