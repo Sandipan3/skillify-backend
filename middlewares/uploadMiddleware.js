@@ -3,7 +3,7 @@ import multer from "multer";
 // Store files in memory (buffer available in req.file.buffer)
 const storage = multer.memoryStorage();
 
-// Only allow image or PDF
+// Only allow image
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype.startsWith("image/") ||
@@ -18,12 +18,14 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 100 * 1024 * 1024 }, // 20MB limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
 });
 
-// Single file (field name: 'file')
 export const uploadMiddleware = upload.fields([
   { name: "thumbnail", maxCount: 1 },
   { name: "videos", maxCount: 20 },
 ]);
 export default uploadMiddleware;
+
+/** Uploading videos directly to ram is bad
+ */

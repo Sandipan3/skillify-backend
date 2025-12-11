@@ -4,9 +4,7 @@ import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 import redis from "../config/redis.js";
 import Enrollment from "../models/Enrollment.js";
 
-// ==============================
-// Cloudinary upload helpers (your requested position)
-// ==============================
+// Cloudinary upload helpers
 export const uploadImageToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -19,25 +17,28 @@ export const uploadImageToCloudinary = (buffer, folder) => {
 
 export const uploadVideoToCloudinary = (buffer, folder) => {
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "video" },
+    // Convert buffer to a Base64 Data URI
+    const dataUri = `data:video/mp4;base64,${buffer.toString("base64")}`;
+
+    cloudinary.uploader.upload(
+      dataUri,
+      {
+        folder,
+        resource_type: "video",
+        chunk_size: 6000000, // 6MB chunk size
+      },
       (err, res) => (err ? reject(err) : resolve(res))
     );
-    stream.end(buffer);
   });
 };
 
-// ==============================
-// CACHE INVALIDATION
-// ==============================
+// Cache invalidation
 const invalidateCourseCache = async (courseId) => {
   await redis.del("courses:all");
   if (courseId) await redis.del(`course:${courseId}`);
 };
 
-// ==============================
 // create course
-// ==============================
 export const createCourse = async (req, res) => {
   const { title, description, price } = req.body;
   const instructor = req.user.userId;
@@ -111,9 +112,7 @@ export const createCourse = async (req, res) => {
   }
 };
 
-// ==============================
 // get all courses
-// ==============================
 export const getAllCourses = async (req, res) => {
   try {
     const key = "courses:all";
@@ -135,9 +134,7 @@ export const getAllCourses = async (req, res) => {
   }
 };
 
-// ==============================
 // get course by id
-// ==============================
 
 export const getCourseById = async (req, res) => {
   try {
@@ -176,9 +173,7 @@ export const getCourseById = async (req, res) => {
   }
 };
 
-// ==============================
 // get instructor courses
-// ==============================
 export const getInstructorCourses = async (req, res) => {
   try {
     const instructorId = req.user.userId;
@@ -193,9 +188,7 @@ export const getInstructorCourses = async (req, res) => {
   }
 };
 
-// ==============================
 // update course
-// ==============================
 export const updateCourse = async (req, res) => {
   let newThumbnail = null;
   let newVideos = [];
@@ -276,9 +269,7 @@ export const updateCourse = async (req, res) => {
   }
 };
 
-// ==============================
 // delete course
-// ==============================
 export const deleteCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
@@ -312,9 +303,7 @@ export const deleteCourse = async (req, res) => {
   }
 };
 
-// ==============================
 // delete video
-// ==============================
 export const deleteVideo = async (req, res) => {
   try {
     const { courseId, videoId } = req.params;
