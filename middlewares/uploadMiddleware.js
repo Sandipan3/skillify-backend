@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
   if (
     file.mimetype.startsWith("image/") ||
-    file.mimetype === "application/pdf"
+    file.mimetype.startsWith("video/")
   ) {
     cb(null, true);
   } else {
@@ -18,9 +18,12 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  limits: { fileSize: 100 * 1024 * 1024 }, // 20MB limit
 });
 
 // Single file (field name: 'file')
-export const uploadMiddleware = upload.single("file");
+export const uploadMiddleware = upload.fields([
+  { name: "thumbnail", maxCount: 1 },
+  { name: "videos", maxCount: 20 },
+]);
 export default uploadMiddleware;
