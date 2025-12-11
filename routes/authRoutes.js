@@ -7,33 +7,37 @@ import {
   profile,
   changeRole,
   selectRole,
+  googleCallback,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
 import passport from "../middlewares/passport.js";
-import { googleCallback } from "../controllers/authControllers.js";
 
 const router = express.Router();
 
-// Auth endpoints
+// ======================= AUTH =======================
 router.post("/register", register);
 router.post("/login", login);
-router.post("/logout", authMiddleware, logout);
 router.post("/refresh", refreshToken);
 
-// User profile
+// Logout requires user to be logged in
+router.post("/logout", authMiddleware, logout);
+
+// ======================= USER =======================
 router.get("/profile", authMiddleware, profile);
 
-// Role selection
+// ======================= ROLE MANAGEMENT =======================
 router.post("/select-role", authMiddleware, selectRole);
+
 router.post("/change-role", authMiddleware, allowedRoles("admin"), changeRole);
 
-// Social Login - Google
+// ======================= GOOGLE AUTH =======================
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
+// Callback must come after the Google login URL
 router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),

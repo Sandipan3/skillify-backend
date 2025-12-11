@@ -14,8 +14,10 @@ import uploadMiddleware from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
+// All routes require authentication
 router.use(authMiddleware);
 
+// ================== CREATE ==================
 router.post(
   "/create",
   allowedRoles("instructor"),
@@ -23,14 +25,17 @@ router.post(
   createCourse
 );
 
+// ================== READ ==================
 router.get("/", getAllCourses);
-
-router.get("/:id", getCourseById);
 
 router.get("/my-courses", allowedRoles("instructor"), getInstructorCourses);
 
+router.get("/:id", getCourseById);
+
+// ================== UPDATE ==================
 router.put("/:id", allowedRoles("instructor"), uploadMiddleware, updateCourse);
 
+// ================== DELETE ==================
 router.delete("/:id", allowedRoles("instructor"), deleteCourse);
 
 router.delete(
