@@ -6,6 +6,7 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      unique: true,
     },
 
     description: {
@@ -21,8 +22,14 @@ const courseSchema = new mongoose.Schema(
     },
 
     thumbnail: {
-      type: String, //cloudinary thumbnail URL
-      required: true,
+      url: {
+        type: String, // Cloudinary thumbnail URL
+        required: true,
+      },
+      public_id: {
+        type: String, // Cloudinary public_id
+        required: true,
+      },
     },
 
     videos: [
