@@ -79,9 +79,13 @@ export const login = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    // delete password and return user
+    const userObj = user.toObject();
+    delete userObj.password;
+
     return sendSuccessResponse(res, {
       message: "Login successful",
-      user,
+      user: userObj,
       accessToken,
     });
   } catch (error) {
