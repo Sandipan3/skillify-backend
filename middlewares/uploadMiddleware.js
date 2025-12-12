@@ -31,9 +31,8 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// -------------------------------------------------------------
-// FIX: Single multer instance with field-based storage redirect
-// -------------------------------------------------------------
+// Single multer instance with field-based storage redirect
+
 const storage = {
   _handleFile(req, file, cb) {
     if (file.fieldname === "thumbnail") {

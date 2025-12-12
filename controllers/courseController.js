@@ -37,15 +37,19 @@ export const uploadVideoToCloudinary = (filePath, folder) => {
   });
 };
 
-// CACHE INVALIDATION (ONLY two keys)
 const invalidateCourseCache = async (courseId) => {
-  // Delete all paginated caches
-  const pageKeys = await redis.keys("courses:page:*");
-  if (pageKeys.length) await redis.del(pageKeys);
+  try {
+    // Delete all paginated course list caches
+    const listKeys = await redis.keys("courses:page:*");
+    if (listKeys.length > 0) await redis.del(listKeys);
 
-  // Delete specific course cache
-  if (courseId) {
-    await redis.del(`course:${courseId}`);
+    // Delete all cached pages of a single course
+    if (courseId) {
+      const courseKeys = await redis.keys(`course:${courseId}:page:*`);
+      if (courseKeys.length > 0) await redis.del(courseKeys);
+    }
+  } catch (err) {
+    console.log("CACHE INVALIDATION ERROR", err);
   }
 };
 
