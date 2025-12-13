@@ -8,9 +8,7 @@ import redis from "../config/redis.js";
 
 dotenv.config();
 
-// ---------------------------------------------
-// CACHE INVALIDATION HELPERS
-// ---------------------------------------------
+// cache invalidation helper
 const invalidateUserProfileCache = async (userId) => {
   try {
     await redis.del(`user:profile:${userId}`);
