@@ -18,14 +18,14 @@ export const uploadImageToCloudinary = (buffer, folder) => {
   });
 };
 
-// Upload video from TEMP file using streaming (Render-safe)
+// Upload video from TEMP file using streaming
 export const uploadVideoToCloudinary = (filePath, folder) => {
   return new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
         resource_type: "video",
-        chunk_size: 6_000_000,
+        chunk_size: 6000000, //6MB
       },
       (err, res) => {
         fs.unlinkSync(filePath); // delete temp file
@@ -37,16 +37,16 @@ export const uploadVideoToCloudinary = (filePath, folder) => {
   });
 };
 
-const invalidateCourseCache = async (courseId) => {
+const invalidateCourseCache = async (courseId, instructorId) => {
   try {
     // Delete all paginated course list caches
     const listKeys = await redis.keys("courses:page:*");
     if (listKeys.length > 0) await redis.del(listKeys);
 
-    // Delete all cached pages of a single course
-    if (courseId) {
-      const courseKeys = await redis.keys(`course:${courseId}:page:*`);
-      if (courseKeys.length > 0) await redis.del(courseKeys);
+    // Delete instructor paginated caches
+    if (instructorId) {
+      const instructorKeys = await redis.keys(`courses:${instructorId}:page:*`);
+      if (instructorKeys.length > 0) await redis.del(instructorKeys);
     }
   } catch (err) {
     console.log("CACHE INVALIDATION ERROR", err);
@@ -63,7 +63,7 @@ export const createCourse = async (req, res) => {
 
   // Check if a course with the same title exists
   const existingCourse = await Course.findOne({
-    title: { $regex: `^${title}$`, $options: "i" },
+    title: { $regex: `^${title.trim()}$`, $options: "i" },
   });
 
   if (existingCourse) {
@@ -119,7 +119,7 @@ export const createCourse = async (req, res) => {
 
     await course.populate("instructor", "name");
 
-    await invalidateCourseCache();
+    await invalidateCourseCache(null, instructor);
 
     return sendSuccessResponse(res, { course }, 201);
   } catch (error) {
@@ -184,49 +184,16 @@ export const getCourseById = async (req, res) => {
   try {
     const courseId = req.params.id;
 
-    // Pagination
-    const page = parseInt(req.query.page) || 1;
-    const limit = 9;
-    const skip = (page - 1) * limit;
-
-    // Cache key should include page to avoid conflicts
-    const cacheKey = `course:${courseId}:page:${page}`;
-    const cached = await redis.get(cacheKey);
-
-    if (cached) {
-      return sendSuccessResponse(res, JSON.parse(cached));
-    }
-
-    // Fetch course details
     const course = await Course.findById(courseId).populate(
       "instructor",
       "name email"
     );
 
-    if (!course) return sendErrorResponse(res, "Course not found", 404);
+    if (!course) {
+      return sendErrorResponse(res, "Course not found", 404);
+    }
 
-    // Count total students for pagination
-    const totalStudents = await Enrollment.countDocuments({ course: courseId });
-    const totalPages = Math.ceil(totalStudents / limit);
-
-    // Get paginated students
-    const students = await Enrollment.find({ course: courseId })
-      .populate("student", "name email")
-      .skip(skip)
-      .limit(limit);
-
-    const responseData = {
-      course: course.toObject(),
-      students,
-      enrollmentCount: totalStudents,
-      page,
-      totalPages,
-      totalStudents,
-    };
-
-    await redis.set(cacheKey, JSON.stringify(responseData), "EX", 300);
-
-    return sendSuccessResponse(res, responseData);
+    return sendSuccessResponse(res, course.toObject(), 200);
   } catch (error) {
     console.log("GET COURSE BY ID ERROR:", error);
     return sendErrorResponse(res, "Server Error", 500);
@@ -243,6 +210,11 @@ export const getInstructorCourses = async (req, res) => {
     const limit = 9;
     const skip = (page - 1) * limit;
 
+    const cacheKey = `courses:${instructorId}:page:${page}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) return sendSuccessResponse(res, JSON.parse(cached));
+
     // Count total instructor courses
     const totalCourses = await Course.countDocuments({
       instructor: instructorId,
@@ -256,12 +228,16 @@ export const getInstructorCourses = async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    return sendSuccessResponse(res, {
+    const responseData = {
       courses,
       page,
       totalPages,
       totalCourses,
-    });
+    };
+
+    await redis.set(cacheKey, JSON.stringify(responseData), "EX", 300);
+
+    return sendSuccessResponse(res, responseData);
   } catch (error) {
     console.log("GET INSTRUCTOR COURSES ERROR:", error);
     return sendErrorResponse(res, "Server Error", 500);
@@ -285,7 +261,7 @@ export const updateCourse = async (req, res) => {
     // Only check if title is being updated
     if (title && title.toLowerCase() !== course.title.toLowerCase()) {
       const existingCourse = await Course.findOne({
-        title: { $regex: `^${title}$`, $options: "i" },
+        title: { $regex: `^${title.trim()}$`, $options: "i" },
       });
 
       if (existingCourse) {
@@ -297,26 +273,28 @@ export const updateCourse = async (req, res) => {
       }
     }
 
-    // Replace Thumbnail
+    // upload new thumbnail first
     if (req.files?.thumbnail) {
       newThumbnail = await uploadImageToCloudinary(
         req.files.thumbnail[0].buffer,
         "skillify-thumbnails"
       );
 
+      // delete old course thumbnail
       if (course.thumbnail?.public_id) {
         await cloudinary.uploader.destroy(course.thumbnail.public_id, {
           resource_type: "image",
         });
       }
 
+      // update the new thumbnail in db
       course.thumbnail = {
         url: newThumbnail.secure_url,
         public_id: newThumbnail.public_id,
       };
     }
 
-    // Add New Videos (append)
+    // upload New Videos (append) first
     if (req.files?.videos?.length) {
       for (let video of req.files.videos) {
         const uploaded = await uploadVideoToCloudinary(
@@ -324,6 +302,7 @@ export const updateCourse = async (req, res) => {
           "skillify-videos"
         );
 
+        //store them in array for rollback if required
         newVideos.push({
           title: video.originalname.replace(/\.[^/.]+$/, ""),
           url: uploaded.secure_url,
@@ -331,6 +310,7 @@ export const updateCourse = async (req, res) => {
         });
       }
 
+      // update the changes in db
       course.videos.push(...newVideos);
     }
 
@@ -342,7 +322,7 @@ export const updateCourse = async (req, res) => {
     await course.save();
     await course.populate("instructor", "name");
 
-    await invalidateCourseCache(course._id);
+    await invalidateCourseCache(course._id, course.instructor.toString());
 
     return sendSuccessResponse(res, { course });
   } catch (error) {
@@ -369,23 +349,32 @@ export const deleteCourse = async (req, res) => {
     if (course.instructor.toString() !== req.user.userId)
       return sendErrorResponse(res, "Not authorized", 403);
 
-    // Delete thumbnail
+    // delete course
+    await Course.findByIdAndDelete(course._id);
+
+    // delete thumbnail from cloudinary
     if (course.thumbnail?.public_id) {
-      await cloudinary.uploader.destroy(course.thumbnail.public_id, {
-        resource_type: "image",
-      });
+      try {
+        await cloudinary.uploader.destroy(course.thumbnail.public_id, {
+          resource_type: "image",
+        });
+      } catch (error) {
+        console.warn("Thumbnail cleanup failed:", error.message);
+      }
     }
 
-    // Delete all videos
-    for (let vid of course.videos) {
-      await cloudinary.uploader.destroy(vid.public_id, {
-        resource_type: "video",
-      });
+    // delete videos from cloudinary
+    for (const vid of course.videos) {
+      try {
+        await cloudinary.uploader.destroy(vid.public_id, {
+          resource_type: "video",
+        });
+      } catch (error) {
+        console.warn("Video cleanup failed:", error.message);
+      }
     }
 
-    await Course.findByIdAndDelete(req.params.id);
-
-    await invalidateCourseCache(course._id);
+    await invalidateCourseCache(course._id, course.instructor.toString());
 
     return sendSuccessResponse(res, { message: "Course deleted" });
   } catch (error) {
@@ -407,16 +396,25 @@ export const deleteVideo = async (req, res) => {
     const video = course.videos.id(videoId);
     if (!video) return sendErrorResponse(res, "Video not found", 404);
 
-    // Delete from Cloudinary
-    await cloudinary.uploader.destroy(video.public_id, {
-      resource_type: "video",
-    });
+    const publicId = video.public_id;
 
-    // Delete from DB
+    // remove video from DB first
     course.videos.pull(videoId);
     await course.save();
 
-    await invalidateCourseCache(course._id);
+    //delete video from cloudinary
+    try {
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: "video",
+      });
+    } catch (error) {
+      console.warn(
+        `Cloudinary cleanup failed for video ${publicId}:`,
+        error.message
+      );
+    }
+
+    await invalidateCourseCache(course._id, course.instructor.toString());
 
     return sendSuccessResponse(res, { message: "Video deleted" });
   } catch (error) {
@@ -424,7 +422,7 @@ export const deleteVideo = async (req, res) => {
   }
 };
 
-// REPLACE VIDEO (NEW FEATURE)
+// REPLACE VIDEO
 export const replaceVideo = async (req, res) => {
   try {
     const { courseId, videoId } = req.params;
@@ -440,7 +438,6 @@ export const replaceVideo = async (req, res) => {
     if (course.instructor.toString() !== req.user.userId)
       return sendErrorResponse(res, "Not authorized", 403);
 
-    // Find index of the existing video
     const videoIndex = course.videos.findIndex(
       (v) => v._id.toString() === videoId
     );
@@ -450,18 +447,13 @@ export const replaceVideo = async (req, res) => {
 
     const oldVideo = course.videos[videoIndex];
 
-    // Upload new video
+    // Upload new video to cloudinary
     const uploaded = await uploadVideoToCloudinary(
       newVideoFile.path,
       "skillify-videos"
     );
 
-    // Remove old Cloudinary asset
-    await cloudinary.uploader.destroy(oldVideo.public_id, {
-      resource_type: "video",
-    });
-
-    // Replace in place (keeping order)
+    // save changes in db
     course.videos[videoIndex] = {
       title: newVideoFile.originalname.replace(/\.[^/.]+$/, ""),
       url: uploaded.secure_url,
@@ -470,7 +462,16 @@ export const replaceVideo = async (req, res) => {
 
     await course.save();
 
-    await invalidateCourseCache(courseId);
+    // delete video from cloudinary
+    try {
+      await cloudinary.uploader.destroy(oldVideo.public_id, {
+        resource_type: "video",
+      });
+    } catch (error) {
+      console.warn("Old video cleanup failed!", error.message);
+    }
+
+    await invalidateCourseCache(courseId, course.instructor.toString());
 
     return sendSuccessResponse(res, {
       message: "Video replaced successfully",
