@@ -8,6 +8,17 @@ import redis from "../config/redis.js";
 
 dotenv.config();
 
+// ---------------------------------------------
+// CACHE INVALIDATION HELPERS
+// ---------------------------------------------
+const invalidateUserProfileCache = async (userId) => {
+  try {
+    await redis.del(`user:profile:${userId}`);
+  } catch (err) {
+    console.warn("USER PROFILE CACHE INVALIDATION ERROR:", err.message);
+  }
+};
+
 // register
 export const register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -173,8 +184,7 @@ export const selectRole = async (req, res) => {
     await user.save();
 
     // invalidate cache & refresh role cache
-    await redis.del(`user:profile:${userId}`);
-    await redis.set(`user:role:${userId}`, user.role, "EX", 300);
+    await invalidateUserProfileCache(userId);
 
     return sendSuccessResponse(res, {
       message: "Role updated",
@@ -199,8 +209,7 @@ export const changeRole = async (req, res) => {
     user.role = newRole;
     await user.save();
 
-    await redis.del(`user:profile:${userId}`);
-    await redis.set(`user:role:${userId}`, user.role, "EX", 300);
+    await invalidateUserProfileCache(userId);
 
     return sendSuccessResponse(res, {
       message: "Role updated",
