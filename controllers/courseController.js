@@ -182,19 +182,21 @@ export const getAllCourses = async (req, res) => {
 export const getCourseById = async (req, res) => {
   try {
     const courseId = req.params.id;
+    const instructorId = req.user.userId;
 
-    const course = await Course.findById(courseId).populate(
-      "instructor",
-      "name email"
-    );
+    const course = await Course.findOne({
+      _id: courseId,
+      instructor: instructorId,
+    }).populate("instructor", "name email");
 
     if (!course) {
       return sendErrorResponse(res, "Course not found", 404);
     }
 
-    return sendSuccessResponse(res, course.toObject(), 200);
+    // Return course directly
+    return sendSuccessResponse(res, course, 200);
   } catch (error) {
-    console.log("GET COURSE BY ID ERROR:", error);
+    console.error("GET COURSE BY ID ERROR:", error);
     return sendErrorResponse(res, "Server Error", 500);
   }
 };
