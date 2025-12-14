@@ -136,7 +136,11 @@ export const createCourse = async (req, res) => {
       });
     }
 
-    return sendErrorResponse(res, "Course creation failed", 500);
+    return sendErrorResponse(
+      res,
+      error.message || "Course creation failed",
+      500
+    );
   }
 };
 
@@ -174,7 +178,7 @@ export const getAllCourses = async (req, res) => {
     return sendSuccessResponse(res, responseData);
   } catch (error) {
     console.log(error);
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -200,7 +204,7 @@ export const getCourseById = async (req, res) => {
     return sendSuccessResponse(res, courseObj, 200);
   } catch (error) {
     console.error("GET COURSE BY ID ERROR:", error);
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -244,7 +248,7 @@ export const getInstructorCourses = async (req, res) => {
     return sendSuccessResponse(res, responseData);
   } catch (error) {
     console.log("GET INSTRUCTOR COURSES ERROR:", error);
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -340,7 +344,7 @@ export const updateCourse = async (req, res) => {
       await cloudinary.uploader.destroy(vid.public_id);
     }
 
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -382,7 +386,7 @@ export const deleteCourse = async (req, res) => {
 
     return sendSuccessResponse(res, { message: "Course deleted" });
   } catch (error) {
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -422,7 +426,7 @@ export const deleteVideo = async (req, res) => {
 
     return sendSuccessResponse(res, { message: "Video deleted" });
   } catch (error) {
-    return sendErrorResponse(res, "Server Error", 500);
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };
 
@@ -482,6 +486,6 @@ export const replaceVideo = async (req, res) => {
     });
   } catch (error) {
     console.log("REPLACE VIDEO ERROR:", error);
-    return sendErrorResponse(res, "Server error", 500);
+    return sendErrorResponse(res, error.message || "Server error", 500);
   }
 };

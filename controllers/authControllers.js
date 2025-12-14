@@ -60,7 +60,11 @@ export const register = async (req, res) => {
       201
     );
   } catch (error) {
-    return sendErrorResponse(res, "User registration failed", 500);
+    return sendErrorResponse(
+      res,
+      error.message || "User registration failed",
+      500
+    );
   }
 };
 
@@ -98,7 +102,7 @@ export const login = async (req, res) => {
       accessToken,
     });
   } catch (error) {
-    return sendErrorResponse(res, "Login failed", 500);
+    return sendErrorResponse(res, error.message || "Login failed", 500);
   }
 };
 
@@ -128,7 +132,11 @@ export const refreshToken = async (req, res) => {
       accessToken: newAccessToken,
     });
   } catch (error) {
-    return sendErrorResponse(res, "Invalid or expired refresh token", 401);
+    return sendErrorResponse(
+      res,
+      error.message || "Invalid or expired refresh token",
+      401
+    );
   }
 };
 
@@ -138,7 +146,7 @@ export const logout = (req, res) => {
     res.clearCookie("refreshToken");
     return sendSuccessResponse(res, { message: "Logout successful" });
   } catch (error) {
-    return sendErrorResponse(res, "Logout failed", 500);
+    return sendErrorResponse(res, error.message || "Logout failed", 500);
   }
 };
 
@@ -161,7 +169,7 @@ export const profile = async (req, res) => {
 
     return sendSuccessResponse(res, { user });
   } catch (error) {
-    return sendErrorResponse(res, "Server error", 500);
+    return sendErrorResponse(res, error.message || "Server error", 500);
   }
 };
 
@@ -189,7 +197,7 @@ export const selectRole = async (req, res) => {
       user,
     });
   } catch (error) {
-    return sendErrorResponse(res, "Server error", 500);
+    return sendErrorResponse(res, error.message || "Server error", 500);
   }
 };
 
@@ -214,7 +222,7 @@ export const changeRole = async (req, res) => {
       user,
     });
   } catch (error) {
-    return sendErrorResponse(res, "Server error", 500);
+    return sendErrorResponse(res, error.message || "Server error", 500);
   }
 };
 
@@ -238,6 +246,6 @@ export const googleCallback = async (req, res) => {
       `${process.env.FRONTEND_URL}/auth/callback?access_token=${accessToken}`
     );
   } catch (error) {
-    return sendErrorResponse(res, "Google auth failed", 500);
+    return sendErrorResponse(res, error.message || "Google auth failed", 500);
   }
 };
