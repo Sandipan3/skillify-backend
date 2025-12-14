@@ -193,8 +193,11 @@ export const getCourseById = async (req, res) => {
       return sendErrorResponse(res, "Course not found", 404);
     }
 
-    // Return course directly
-    return sendSuccessResponse(res, course, 200);
+    // Normalize response shape
+    const courseObj = course.toObject();
+    courseObj.videos = courseObj.videos || [];
+
+    return sendSuccessResponse(res, courseObj, 200);
   } catch (error) {
     console.error("GET COURSE BY ID ERROR:", error);
     return sendErrorResponse(res, "Server Error", 500);
