@@ -52,15 +52,38 @@ const invalidateCourseCache = async (courseId, instructorId) => {
   }
 };
 
-// CREATE COURSE
 export const createCourse = async (req, res) => {
-  const { title, description, price } = req.body;
+  const { title, description, price = 0, upiId } = req.body;
   const instructor = req.user.userId;
 
-  if (!title || !description)
+  if (!title || !description) {
     return sendErrorResponse(res, "Title and description are required", 400);
+  }
 
-  // Check if a course with the same title exists
+  // Required ONLY for paid courses
+  if (price > 0) {
+    const instructorUser = await User.findById(instructor);
+
+    if (!instructorUser) {
+      return sendErrorResponse(res, "Instructor not found", 404);
+    }
+
+    // Save UPI only once
+    if (!instructorUser.upiId) {
+      if (!upiId) {
+        return sendErrorResponse(
+          res,
+          "UPI ID is required for paid courses",
+          400
+        );
+      }
+
+      instructorUser.upiId = upiId;
+      await instructorUser.save();
+    }
+  }
+
+  // Check duplicate course title
   const existingCourse = await Course.findOne({
     title: { $regex: `^${title.trim()}$`, $options: "i" },
   });
@@ -73,11 +96,13 @@ export const createCourse = async (req, res) => {
     );
   }
 
-  if (!req.files?.thumbnail)
+  if (!req.files?.thumbnail) {
     return sendErrorResponse(res, "Thumbnail is required", 400);
+  }
 
-  if (!req.files?.videos || req.files.videos.length === 0)
+  if (!req.files?.videos || req.files.videos.length === 0) {
     return sendErrorResponse(res, "At least one video is required", 400);
+  }
 
   let uploadedThumbnail = null;
   let uploadedVideos = [];
@@ -113,7 +138,7 @@ export const createCourse = async (req, res) => {
         public_id: uploadedThumbnail.public_id,
       },
       videos: uploadedVideos,
-      price: price || 0,
+      price,
     });
 
     await course.populate("instructor", "name");
@@ -125,10 +150,11 @@ export const createCourse = async (req, res) => {
     console.log("CREATE COURSE ERROR:", error);
 
     // Cleanup if failure
-    if (uploadedThumbnail?.public_id)
+    if (uploadedThumbnail?.public_id) {
       await cloudinary.uploader.destroy(uploadedThumbnail.public_id, {
         resource_type: "image",
       });
+    }
 
     for (let vid of uploadedVideos) {
       await cloudinary.uploader.destroy(vid.public_id, {
@@ -252,7 +278,7 @@ export const getInstructorCourses = async (req, res) => {
   }
 };
 
-// UPDATE COURSE (Replace Thumbnail + Add Videos)
+// UPDATE COURSE
 export const updateCourse = async (req, res) => {
   let newThumbnail = null;
   let newVideos = [];
@@ -264,7 +290,9 @@ export const updateCourse = async (req, res) => {
     if (course.instructor.toString() !== req.user.userId)
       return sendErrorResponse(res, "Not authorized", 403);
 
-    const { title, description, price } = req.body;
+    const { title, description, price, upiId } = req.body;
+
+    // Allow UPI update (frontend controlled)
 
     // Only check if title is being updated
     if (title && title.toLowerCase() !== course.title.toLowerCase()) {
@@ -288,21 +316,19 @@ export const updateCourse = async (req, res) => {
         "skillify-thumbnails"
       );
 
-      // delete old course thumbnail
       if (course.thumbnail?.public_id) {
         await cloudinary.uploader.destroy(course.thumbnail.public_id, {
           resource_type: "image",
         });
       }
 
-      // update the new thumbnail in db
       course.thumbnail = {
         url: newThumbnail.secure_url,
         public_id: newThumbnail.public_id,
       };
     }
 
-    // upload New Videos (append) first
+    // upload New Videos (append)
     if (req.files?.videos?.length) {
       for (let video of req.files.videos) {
         const uploaded = await uploadVideoToCloudinary(
@@ -310,7 +336,6 @@ export const updateCourse = async (req, res) => {
           "skillify-videos"
         );
 
-        //store them in array for rollback if required
         newVideos.push({
           title: video.originalname.replace(/\.[^/.]+$/, ""),
           url: uploaded.secure_url,
@@ -318,7 +343,6 @@ export const updateCourse = async (req, res) => {
         });
       }
 
-      // update the changes in db
       course.videos.push(...newVideos);
     }
 
@@ -326,6 +350,9 @@ export const updateCourse = async (req, res) => {
     if (title) course.title = title;
     if (description) course.description = description;
     if (price !== undefined) course.price = price;
+    if (upiId) {
+      await User.findByIdAndUpdate(req.user.userId, { upiId }, { new: true });
+    }
 
     await course.save();
     await course.populate("instructor", "name");
@@ -336,7 +363,6 @@ export const updateCourse = async (req, res) => {
   } catch (error) {
     console.log("UPDATE COURSE ERROR:", error);
 
-    // Cleanup newly uploaded assets on error
     if (newThumbnail?.public_id)
       await cloudinary.uploader.destroy(newThumbnail.public_id);
 
