@@ -3,6 +3,7 @@ import cloudinary from "../config/cloudinary.js";
 import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 import redis from "../config/redis.js";
 import fs from "fs";
+import User from "../models/User.js";
 
 // CLOUDINARY HELPERS
 // Upload image from memory buffer
