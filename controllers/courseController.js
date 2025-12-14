@@ -2,7 +2,6 @@ import Course from "../models/Course.js";
 import cloudinary from "../config/cloudinary.js";
 import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 import redis from "../config/redis.js";
-import Enrollment from "../models/Enrollment.js";
 import fs from "fs";
 
 // CLOUDINARY HELPERS

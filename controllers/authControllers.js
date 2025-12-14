@@ -233,8 +233,9 @@ export const googleCallback = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    // Redirect to frontend
     return res.redirect(
-      `http://localhost:5173/auth/callback?access_token=${accessToken}`
+      `${process.env.FRONTEND_URL}/auth/callback?access_token=${accessToken}`
     );
   } catch (error) {
     return sendErrorResponse(res, "Google auth failed", 500);
