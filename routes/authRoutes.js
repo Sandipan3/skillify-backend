@@ -16,7 +16,7 @@ import passport from "../middlewares/passport.js";
 
 const router = express.Router();
 
-// ======================= AUTH =======================
+// AUTH
 router.post("/register/init", registerInit);
 router.post("/register/verify", verifyRegister);
 router.post("/login", login);
@@ -25,15 +25,15 @@ router.post("/refresh", refreshToken);
 // Logout requires user to be logged in
 router.post("/logout", authMiddleware, logout);
 
-// ======================= USER =======================
+// USER
 router.get("/profile", authMiddleware, profile);
 
-// ======================= ROLE MANAGEMENT =======================
+// ROLE MANAGEMENT
 router.post("/select-role", authMiddleware, selectRole);
 
 router.post("/change-role", authMiddleware, allowedRoles("admin"), changeRole);
 
-// ======================= GOOGLE AUTH =======================
+// GOOGLE AUTH
 router.get(
   "/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
