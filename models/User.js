@@ -20,11 +20,11 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
-    role: {
-      type: String,
+    roles: {
+      type: [String],
       enum: ["admin", "instructor", "student", "user"],
-      lowercase: true,
-      default: "user",
+      default: ["user"],
+      set: (roles) => roles.map((role) => role.toLowerCase()),
     },
 
     profileCompleted: {

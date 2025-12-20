@@ -269,10 +269,12 @@ export const changeRole = async (req, res) => {
     const user = await User.findById(userId).select("-password");
     if (!user) return sendErrorResponse(res, "User not found", 404);
 
-    user.role = newRole;
-    await user.save();
-
-    await invalidateUserProfileCache(userId);
+    // add role only if not already present
+    if (!user.roles.includes(newRole)) {
+      user.roles.push(newRole);
+      await user.save();
+      await invalidateUserProfileCache(userId);
+    }
 
     return sendSuccessResponse(res, {
       message: "Role updated",
@@ -307,7 +309,6 @@ export const googleCallback = async (req, res) => {
   }
 };
 
-//forgot password
 // forgot password
 export const forgotPassword = async (req, res) => {
   try {
