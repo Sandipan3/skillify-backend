@@ -9,8 +9,8 @@ import {
   googleCallback,
   registerInit,
   verifyRegister,
-  forgotPassoword,
   resetPassword,
+  forgotPassword,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
@@ -49,7 +49,7 @@ router.get(
 );
 
 // Forgot Password
-router.post("/forgot-password", forgotPassoword);
+router.post("/forgot-password", forgotPassword);
 
 // Reset Password
 router.post("/reset-password/:token", resetPassword);
