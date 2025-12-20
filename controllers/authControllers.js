@@ -6,7 +6,10 @@ import crypto from "crypto";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 import redis from "../config/redis.js";
-import { verifyRegisterEmail } from "../services/sendMail.js";
+import {
+  sendPasswordResetEmail,
+  verifyRegisterEmail,
+} from "../services/sendMail.js";
 
 dotenv.config();
 
@@ -301,5 +304,84 @@ export const googleCallback = async (req, res) => {
     );
   } catch (error) {
     return sendErrorResponse(res, error.message || "Google auth failed", 500);
+  }
+};
+
+//forgot password
+// forgot password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return sendErrorResponse(res, "Email is required", 400);
+    }
+
+    const user = await User.findOne({ email });
+
+    // prevent user enumeration
+    if (!user) {
+      return sendSuccessResponse(
+        res,
+        { message: "If the email exists, a reset link has been sent" },
+        200
+      );
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    await redis.set(
+      `reset:password:${resetToken}`,
+      user._id.toString(),
+      "EX",
+      15 * 60
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    await sendPasswordResetEmail(user.email, resetLink);
+
+    return sendSuccessResponse(
+      res,
+      { message: "If the email exists, a reset link has been sent" },
+      200
+    );
+  } catch (error) {
+    return sendErrorResponse(res, error.message || "Server Error", 500);
+  }
+};
+
+// reset password
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return sendErrorResponse(res, "Password is required", 400);
+    }
+
+    const userId = await redis.get(`reset:password:${token}`);
+    if (!userId) {
+      return sendErrorResponse(res, "Invalid or expired reset token", 400);
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return sendErrorResponse(res, "Invalid or expired reset token", 400);
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    await user.save();
+
+    await redis.del(`reset:password:${token}`);
+
+    return sendSuccessResponse(
+      res,
+      { message: "Password reset successful" },
+      200
+    );
+  } catch (error) {
+    return sendErrorResponse(res, error.message || "Server Error", 500);
   }
 };

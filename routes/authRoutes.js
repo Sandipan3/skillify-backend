@@ -9,6 +9,8 @@ import {
   googleCallback,
   registerInit,
   verifyRegister,
+  forgotPassoword,
+  resetPassword,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
@@ -45,5 +47,11 @@ router.get(
   passport.authenticate("google", { session: false }),
   googleCallback
 );
+
+// Forgot Password
+router.post("/forgot-password", forgotPassoword);
+
+// Reset Password
+router.post("/reset-password/:token", resetPassword);
 
 export default router;
