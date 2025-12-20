@@ -2,9 +2,11 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
 import redis from "../config/redis.js";
+import { verifyRegisterEmail } from "../services/sendMail.js";
 
 dotenv.config();
 
@@ -18,7 +20,7 @@ const invalidateUserProfileCache = async (userId) => {
 };
 
 // register
-export const register = async (req, res) => {
+export const registerInit = async (req, res) => {
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -46,13 +48,63 @@ export const register = async (req, res) => {
     const salt = parseInt(process.env.BCRYPT_SALT) || 10;
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    await redis.set(
+      `register:${email}`,
+      JSON.stringify({
+        name,
+        email,
+        hashedPassword,
+        otpHash,
+      }),
+      "EX",
+      900
+    );
+
+    await verifyRegisterEmail(email, otp);
+
+    return sendSuccessResponse(res, {
+      message: "OTP sent to email",
+    });
+  } catch (error) {
+    return sendErrorResponse(
+      res,
+      error.message || "User registration failed",
+      500
+    );
+  }
+};
+
+//verify register
+export const verifyRegister = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp)
+      return sendErrorResponse(res, "Email and OTP required", 400);
+
+    const data = await redis.get(`register:${email}`);
+    if (!data) return sendErrorResponse(res, "OTP expired or invalid", 400);
+
+    const parsed = JSON.parse(data);
+
+    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+
+    if (otpHash !== parsed.otpHash)
+      return sendErrorResponse(res, "Invalid OTP", 400);
+
     await User.create({
-      name,
-      email,
-      password: hashedPassword,
+      name: parsed.name,
+      email: parsed.email,
+      password: parsed.hashedPassword,
       role: "user",
       profileCompleted: false,
     });
+
+    await redis.del(`register:${email}`);
 
     return sendSuccessResponse(
       res,

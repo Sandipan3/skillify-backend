@@ -3,11 +3,12 @@ import {
   login,
   logout,
   refreshToken,
-  register,
   profile,
   changeRole,
   selectRole,
   googleCallback,
+  registerInit,
+  verifyRegister,
 } from "../controllers/authControllers.js";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
@@ -16,7 +17,8 @@ import passport from "../middlewares/passport.js";
 const router = express.Router();
 
 // ======================= AUTH =======================
-router.post("/register", register);
+router.post("/register/init", registerInit);
+router.post("/register/verify", verifyRegister);
 router.post("/login", login);
 router.post("/refresh", refreshToken);
 
