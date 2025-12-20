@@ -1,5 +1,5 @@
 // import axios from "axios";
-
+import axios from "axios";
 export const verifyRegisterEmail = async (userEmail, otp) => {
   try {
     const res = await axios.post(
