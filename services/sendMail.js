@@ -1,5 +1,26 @@
-// import axios from "axios";
+import { Resend } from "resend";
+
+const resend = new Resend(process.env.RESEND_KEY);
+
+export const verifyRegisterEmail = async (userEmail, otp) => {
+  try {
+    const res = await resend.emails.send({
+      from: "Resend <no-reply@resend.dev>",
+      to: userEmail,
+      subject: "Verify your email",
+      html: `<p>Your OTP is <b>${otp}</b></p>`,
+    });
+
+    console.log("RESEND RESPONSE:", res);
+  } catch (error) {
+    console.error("RESEND ERROR:", error);
+    throw error;
+  }
+};
+
+/**
 import axios from "axios";
+
 export const verifyRegisterEmail = async (userEmail, otp) => {
   try {
     const res = await axios.post(
@@ -7,7 +28,8 @@ export const verifyRegisterEmail = async (userEmail, otp) => {
       {
         sender: {
           name: "Task Management",
-          email: "no-reply@skillify.dev",
+          email: "no-reply@task-management.dev", 
+          // can be any email in dev; verify domain later for prod
         },
         to: [
           {
@@ -35,7 +57,12 @@ export const verifyRegisterEmail = async (userEmail, otp) => {
 
     console.log("BREVO RESPONSE:", res.data);
   } catch (error) {
-    console.error("BREVO ERROR:", error.response?.data || error.message);
+    console.error(
+      "BREVO ERROR:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
+
+ */
