@@ -105,7 +105,7 @@ export const verifyRegister = async (req, res) => {
       name: parsed.name,
       email: parsed.email,
       password: parsed.hashedPassword,
-      role: "user",
+      roles: ["user"],
       profileCompleted: false,
     });
 
@@ -242,7 +242,7 @@ export const selectRole = async (req, res) => {
     const user = await User.findById(userId).select("-password");
     if (!user) return sendErrorResponse(res, "User not found", 404);
 
-    user.role = newRole;
+    user.roles = [newRole];
     user.profileCompleted = true;
     await user.save();
 

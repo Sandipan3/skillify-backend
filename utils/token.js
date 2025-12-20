@@ -3,13 +3,21 @@ dotenv.config();
 import jwt from "jsonwebtoken";
 
 export const generateAccessToken = (user) => {
-  return jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_KEY, {
-    expiresIn: "15m",
-  });
+  return jwt.sign(
+    { userId: user._id, roles: user.roles },
+    process.env.JWT_KEY,
+    {
+      expiresIn: "15m",
+    }
+  );
 };
 
 export const generateRefreshToken = (user) => {
-  return jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_KEY, {
-    expiresIn: "7d",
-  });
+  return jwt.sign(
+    { userId: user._id, roles: user.roles },
+    process.env.JWT_KEY,
+    {
+      expiresIn: "7d",
+    }
+  );
 };
