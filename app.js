@@ -1,4 +1,6 @@
 import express from "express";
+import dotenv from "dotenv";
+dotenv.config();
 import morgan from "morgan";
 import cors from "cors";
 import courseRoutes from "./routes/courseRoutes.js";
