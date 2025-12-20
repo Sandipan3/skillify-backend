@@ -64,7 +64,9 @@ export const registerInit = async (req, res) => {
       900
     );
 
+    console.log("SENDING OTP TO:", email);
     await verifyRegisterEmail(email, otp);
+    console.log("OTP EMAIL SENT");
 
     return sendSuccessResponse(res, {
       message: "OTP sent to email",
