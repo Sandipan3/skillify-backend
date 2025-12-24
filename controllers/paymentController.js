@@ -45,6 +45,7 @@ export const enrollInPaidCourse = async (req, res) => {
 
     return sendSuccessResponse(res, { order }, 200);
   } catch (error) {
+    console.error("Razorpay error:", error);
     return sendErrorResponse(
       res,
       error.message || "Failed to create payment order",
@@ -122,6 +123,7 @@ export const verifyPaymentAndEnroll = async (req, res) => {
 
     return sendSuccessResponse(res, { enrollment }, 201);
   } catch (error) {
+    console.error("Razorpay error:", error);
     return sendErrorResponse(
       res,
       error.message || "Payment verification failed",
