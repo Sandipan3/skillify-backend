@@ -31,8 +31,9 @@ export const enrollInPaidCourse = async (req, res) => {
     const order = await razorpay.orders.create({
       currency: "INR",
       amount: course.price * 100, //amount in paise
-      receipt: `course_${courseId}_${Date.now()}`,
+      receipt: `${courseId}_${Date.now()}`,
     });
+    //note: recipt max length is 40. For now it is 24 + 1 + 13 = 38 characters
 
     //write to db
     await Payment.create({
