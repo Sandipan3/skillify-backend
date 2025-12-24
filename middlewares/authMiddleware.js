@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { sendSuccessResponse, sendErrorResponse } from "../utils/response.js";
+import { sendErrorResponse } from "../utils/response.js";
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -12,6 +12,7 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_KEY);
+
     const user = await User.findById(decoded.userId).select("name roles");
 
     if (!user) {
@@ -21,7 +22,7 @@ const authMiddleware = async (req, res, next) => {
     req.user = {
       userId: decoded.userId,
       name: user.name,
-      role: user.roles,
+      roles: user.roles,
     };
 
     next();
