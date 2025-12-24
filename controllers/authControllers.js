@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import User from "../models/User.js";
-import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
@@ -10,8 +9,6 @@ import {
   sendPasswordResetEmail,
   verifyRegisterEmail,
 } from "../services/sendMail.js";
-
-dotenv.config();
 
 // cache invalidation helper
 const invalidateUserProfileCache = async (userId) => {

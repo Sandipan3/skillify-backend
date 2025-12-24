@@ -10,7 +10,7 @@ const invalidateEnrollmentCache = async (studentId, courseId) => {
 };
 
 // (student) enroll in course
-export const enrollInCourse = async (req, res) => {
+export const enrollInFreeCourse = async (req, res) => {
   try {
     const { courseId } = req.body;
     const studentId = req.user.userId;
@@ -20,13 +20,17 @@ export const enrollInCourse = async (req, res) => {
       return sendErrorResponse(res, "Course not found", 404);
     }
 
+    if (course.price > 0) {
+      return sendErrorResponse(res, "Paid course. Payment required.", 403);
+    }
+
     const existingEnrollment = await Enrollment.findOne({
       course: courseId,
       student: studentId,
     });
 
     if (existingEnrollment) {
-      return sendErrorResponse(res, "Already enrolled in this course", 400);
+      return sendSuccessResponse(res, { message: "Already enrolled" }, 200);
     }
 
     const enrollment = new Enrollment({
@@ -114,7 +118,7 @@ export const unenrollCourse = async (req, res) => {
     });
 
     if (!enrollment) {
-      return sendErrorResponse(res, "You are not enrolled in this course", 404);
+      return sendErrorResponse(res, "You are not enrolled in this course", 400);
     }
 
     await Enrollment.findByIdAndDelete(enrollment._id);

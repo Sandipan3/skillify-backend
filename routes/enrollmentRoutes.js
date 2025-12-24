@@ -2,7 +2,7 @@ import express from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
 import {
-  enrollInCourse,
+  enrollInFreeCourse,
   getEnrollmentCount,
   getMyEnrollments,
   unenrollCourse,
@@ -10,14 +10,13 @@ import {
 
 const router = express.Router();
 
-// ======================= PUBLIC ROUTE =======================
-
+// PUBLIC ROUTE
 router.get("/enrollment-count/:id", getEnrollmentCount);
 
-// ======================= PROTECTED STUDENT ROUTES =======================
+// PROTECTED STUDENT ROUTES
 router.use(authMiddleware);
 
-router.post("/enroll", allowedRoles("student"), enrollInCourse);
+router.post("/enroll-free", allowedRoles("student"), enrollInFreeCourse);
 
 router.get("/my-enrollments", allowedRoles("student"), getMyEnrollments);
 

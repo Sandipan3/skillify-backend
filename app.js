@@ -1,11 +1,10 @@
 import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
 import morgan from "morgan";
 import cors from "cors";
 import courseRoutes from "./routes/courseRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDb.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
@@ -39,6 +38,7 @@ connectDB();
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/enrollment", enrollmentRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 app.use(errorMiddleware);
 
