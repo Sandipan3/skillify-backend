@@ -4,12 +4,6 @@ const allowedRoles = (...roles) => {
   return (req, res, next) => {
     const userRoles = req.user?.roles || [];
 
-    // admin can access everything
-    if (userRoles.includes("admin")) {
-      return next();
-    }
-
-    // check if user has at least one allowed role
     const hasPermission = roles.some((role) => userRoles.includes(role));
 
     if (!hasPermission) {
