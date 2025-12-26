@@ -11,6 +11,7 @@ import {
   getAllCourses,
   getCourseById,
   getInstructorCourses,
+  getStudentCourses,
   updateCourse,
 } from "../controllers/courseController.js";
 
@@ -20,7 +21,6 @@ const router = express.Router();
 router.use(authMiddleware);
 
 // CREATE COURSE (Instructor Only)
-// - Uploads: thumbnail + multiple videos
 router.post(
   "/create",
   allowedRoles("instructor"),
@@ -28,35 +28,32 @@ router.post(
   createCourse
 );
 
-// GET PAGINATED COURSES (9 per page)
-// GET /course?page=1
+// GET PAGINATED COURSES
 router.get("/", getAllCourses);
 
 // GET INSTRUCTOR'S OWN COURSES
 router.get("/my-courses", allowedRoles("instructor"), getInstructorCourses);
 
-// GET COURSE BY ID
+// GET STUDENT ENROLLED COURSES
+router.get("/student-courses", allowedRoles("student"), getStudentCourses);
+
+// GET COURSE BY ID (preview / enrolled / instructor handled in controller)
 router.get("/:id", getCourseById);
 
-// UPDATE COURSE (Add videos, update details, replace thumbnail)
-// Uploading video/thumbnail is optional
+// UPDATE COURSE
 router.put("/:id", allowedRoles("instructor"), uploadMiddleware, updateCourse);
 
 // DELETE ENTIRE COURSE
-// Also deletes Cloudinary thumbnail + videos
 router.delete("/:id", allowedRoles("instructor"), deleteCourse);
 
-// DELETE A SINGLE VIDEO FROM A COURSE
+// DELETE A SINGLE VIDEO
 router.delete(
   "/:courseId/videos/:videoId",
   allowedRoles("instructor"),
   deleteVideo
 );
 
-// REPLACE A SINGLE VIDEO (In-place replacement)
-// - uploads new video
-// - deletes old Cloudinary asset
-// - keeps array order
+// REPLACE A SINGLE VIDEO
 router.put(
   "/:courseId/videos/:videoId/replace",
   allowedRoles("instructor"),
