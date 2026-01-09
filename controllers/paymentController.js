@@ -65,27 +65,28 @@ export const verifyPaymentAndEnroll = async (req, res) => {
 
     const studentId = req.user.userId;
 
-    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
-
-    const signature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_SECRET)
-      .update(body)
-      .digest("hex");
-
-    if (signature !== razorpay_signature) {
-      return sendErrorResponse(res, "Invalid payment signature", 400);
-    }
-
+    // Fetch payment record first
     const payment = await Payment.findOne({
       razorpayOrderId: razorpay_order_id,
       user: studentId,
       course: courseId,
     });
 
+    // Payment record missing, mark as failed
     if (!payment) {
+      await Payment.findOneAndUpdate(
+        {
+          razorpayOrderId: razorpay_order_id,
+          user: studentId,
+          status: "created",
+        },
+        { status: "failed" }
+      );
+
       return sendErrorResponse(res, "Payment record not found", 400);
     }
 
+    // Idempotent check
     if (payment.status === "paid") {
       return sendSuccessResponse(
         res,
@@ -94,13 +95,29 @@ export const verifyPaymentAndEnroll = async (req, res) => {
       );
     }
 
-    // update payment record
+    // Verify Razorpay signature
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      payment.status = "failed";
+      payment.razorpayPaymentId = razorpay_payment_id;
+      payment.razorpaySignature = razorpay_signature;
+      await payment.save();
+
+      return sendErrorResponse(res, "Invalid payment signature", 400);
+    }
+
+    // Mark payment as paid
     payment.razorpayPaymentId = razorpay_payment_id;
     payment.razorpaySignature = razorpay_signature;
     payment.status = "paid";
     await payment.save();
 
-    // prevent duplicate enrollment
+    // Prevent duplicate enrollment
     const alreadyEnrolled = await Enrollment.findOne({
       course: courseId,
       student: studentId,
@@ -110,6 +127,7 @@ export const verifyPaymentAndEnroll = async (req, res) => {
       return sendSuccessResponse(res, { message: "Already enrolled" }, 200);
     }
 
+    // Create enrollment
     const enrollment = await Enrollment.create({
       course: courseId,
       student: studentId,
@@ -123,6 +141,18 @@ export const verifyPaymentAndEnroll = async (req, res) => {
 
     return sendSuccessResponse(res, { enrollment }, 201);
   } catch (error) {
+    // Mark payment as failed on unexpected error
+    if (req.body?.razorpay_order_id && req.user?.userId) {
+      await Payment.findOneAndUpdate(
+        {
+          razorpayOrderId: req.body.razorpay_order_id,
+          user: req.user.userId,
+          status: "created",
+        },
+        { status: "failed" }
+      );
+    }
+
     return sendErrorResponse(
       res,
       error.message || "Payment verification failed",
