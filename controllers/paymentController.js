@@ -104,16 +104,12 @@ export const verifyPaymentAndEnroll = async (req, res) => {
 
     if (expectedSignature !== razorpay_signature) {
       payment.status = "failed";
-      payment.razorpayPaymentId = razorpay_payment_id;
-      payment.razorpaySignature = razorpay_signature;
       await payment.save();
 
       return sendErrorResponse(res, "Invalid payment signature", 400);
     }
 
     // Mark payment as paid
-    payment.razorpayPaymentId = razorpay_payment_id;
-    payment.razorpaySignature = razorpay_signature;
     payment.status = "paid";
     await payment.save();
 
