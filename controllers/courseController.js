@@ -534,7 +534,7 @@ export const replaceVideo = async (req, res) => {
 
     return sendSuccessResponse(
       res,
-      { message: "Video replaced successfully" },
+      { message: "Video replaced successfully", video: course.videos[index] },
       200
     );
   } catch (error) {
