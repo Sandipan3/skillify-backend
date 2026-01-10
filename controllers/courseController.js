@@ -518,6 +518,7 @@ export const replaceVideo = async (req, res) => {
     );
 
     course.videos[index] = {
+      id: oldVideo._id,
       title: req.files.videos[0].originalname.replace(/\.[^/.]+$/, ""),
       url: uploaded.secure_url,
       public_id: uploaded.public_id,
