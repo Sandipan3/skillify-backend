@@ -463,6 +463,35 @@ export const deleteCourse = async (req, res) => {
 };
 
 // DELETE SINGLE VIDEO
+export const deleteVideo = async (req, res) => {
+  try {
+    const { courseId, videoId } = req.params;
+
+    const course = await Course.findById(courseId);
+    if (!course) return sendErrorResponse(res, "Course not found", 404);
+
+    if (course.instructor.toString() !== req.user.userId)
+      return sendErrorResponse(res, "Not authorized", 403);
+
+    const video = course.videos.id(videoId);
+    if (!video) return sendErrorResponse(res, "Video not found", 404);
+
+    course.videos.pull(videoId);
+    await course.save();
+
+    await cloudinary.uploader.destroy(video.public_id, {
+      resource_type: "video",
+    });
+
+    await invalidateCourseCache(null, course.instructor.toString());
+
+    return sendSuccessResponse(res, { message: "Video deleted" }, 200);
+  } catch (error) {
+    return sendErrorResponse(res, error.message || "Server Error", 500);
+  }
+};
+
+// REPLACE VIDEO
 export const replaceVideo = async (req, res) => {
   try {
     const { courseId, videoId } = req.params;
