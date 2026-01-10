@@ -517,12 +517,12 @@ export const replaceVideo = async (req, res) => {
       "skillify-videos"
     );
 
-    course.videos[index] = {
-      id: oldVideo._id,
-      title: req.files.videos[0].originalname.replace(/\.[^/.]+$/, ""),
-      url: uploaded.secure_url,
-      public_id: uploaded.public_id,
-    };
+    course.videos[index].title = req.files.videos[0].originalname.replace(
+      /\.[^/.]+$/,
+      ""
+    );
+    course.videos[index].url = uploaded.secure_url;
+    course.videos[index].public_id = uploaded.public_id;
 
     await course.save();
 
