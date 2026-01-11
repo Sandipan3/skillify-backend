@@ -1,6 +1,6 @@
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
-import { sendErrorResponse, sendSuccessResponse } from "../utils/response";
+import { sendErrorResponse, sendSuccessResponse } from "../utils/response.js";
 import { sendMail } from "../services/sendMail.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
 // invite email for admin onboarding
