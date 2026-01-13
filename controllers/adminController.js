@@ -83,19 +83,18 @@ export const acceptAdminInvite = async (req, res) => {
     if (!user) {
       return sendErrorResponse(res, "User not found", 404);
     }
-    if (user.roles.includes("admin")) {
-      return sendErrorResponse(res, "User is already an admin", 400);
-    }
 
     //upgrade role
-    user.roles = ["admin"];
+    user.roles = [
+      ...new Set([...user.roles.filter((r) => r !== "user"), "admin"]),
+    ];
     await user.save();
 
     await sendMail({
       to: req.user.email,
       subject: "Role Upgraded to Admin, Skillify",
       html: `<div style="font-family: Arial, sans-serif">
-          <h2>Your role has been successdully upgraded to Admin</h2>
+          <h2>Your role has been successdully upgraded Admin</h2>
           <p>Congratulations! You are now an Admin.</p>
         </div>`,
     });
