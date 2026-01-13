@@ -4,6 +4,7 @@ import allowedRoles from "../middlewares/roleMiddleware.js";
 import {
   acceptAdminInvite,
   adminInvite,
+  getRolesCount,
 } from "../controllers/adminController.js";
 
 const router = express.Router();
@@ -13,5 +14,7 @@ router.use(authMiddleware);
 router.post("/invite", allowedRoles("admin"), adminInvite);
 
 router.post("/accept-invite", acceptAdminInvite);
+
+router.get("/counts", allowedRoles("admin"), getRolesCount);
 
 export default router;

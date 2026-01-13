@@ -88,7 +88,7 @@ export const acceptAdminInvite = async (req, res) => {
     }
 
     //upgrade role
-    user.roles.push("admin");
+    user.roles = ["admin"];
     await user.save();
 
     // issue new tokens
@@ -108,5 +108,22 @@ export const acceptAdminInvite = async (req, res) => {
     });
   } catch (error) {
     sendErrorResponse(res, "Invalid or expired invite token", 400);
+  }
+};
+
+// get roles count
+export const getRolesCount = async (req, res) => {
+  try {
+    const adminCount = await User.countDocuments({ roles: "admin" });
+    const instructorCount = await User.countDocuments({ roles: "instructor" });
+    const studentCount = await User.countDocuments({ roles: "student" });
+
+    return sendSuccessResponse(
+      res,
+      { adminCount, instructorCount, studentCount },
+      200
+    );
+  } catch (error) {
+    sendErrorResponse(res, "Unable to get roles count", 400);
   }
 };
