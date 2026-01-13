@@ -91,6 +91,15 @@ export const acceptAdminInvite = async (req, res) => {
     user.roles = ["admin"];
     await user.save();
 
+    await sendMail({
+      to: req.user.email,
+      subject: "Role Upgraded to Admin, Skillify",
+      html: `<div style="font-family: Arial, sans-serif">
+          <h2>Your role has been successdully upgraded to Admin</h2>
+          <p>Congratulations! You are now an Admin.</p>
+        </div>`,
+    });
+
     // issue new tokens
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
