@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { sendErrorResponse, sendSuccessResponse } from "../utils/response.js";
 import { sendMail } from "../services/sendMail.js";
 import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
+import redis from "../config/redis.js";
 // invite email for admin onboarding
 export const adminInvite = async (req, res) => {
   try {
@@ -89,6 +90,9 @@ export const acceptAdminInvite = async (req, res) => {
       ...new Set([...user.roles.filter((r) => r !== "user"), "admin"]),
     ];
     await user.save();
+
+    //invalidate cache
+    await redis.del(`user:profile:${req.user.userId}`);
 
     await sendMail({
       to: req.user.email,
