@@ -1,7 +1,11 @@
 import express from "express";
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
-import { changeTicket, createTicket } from "../controllers/ticketController.js";
+import {
+  changeTicket,
+  createTicket,
+  getTickets,
+} from "../controllers/ticketController.js";
 
 const router = express.Router();
 
