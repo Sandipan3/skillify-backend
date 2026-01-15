@@ -4,6 +4,7 @@ import allowedRoles from "../middlewares/roleMiddleware.js";
 import {
   changeTicket,
   createTicket,
+  getMyTicket,
   getTickets,
 } from "../controllers/ticketController.js";
 
