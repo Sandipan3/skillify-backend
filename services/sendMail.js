@@ -48,9 +48,7 @@ export const verifyRegisterEmail = async (userEmail, otp) => {
   });
 };
 
-/**
- * PASSWORD RESET EMAIL
- */
+// PASSWORD RESET EMAIL
 export const sendPasswordResetEmail = async (userEmail, resetLink) => {
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.5">
@@ -84,6 +82,48 @@ export const sendPasswordResetEmail = async (userEmail, resetLink) => {
   await sendMail({
     to: userEmail,
     subject: "Reset your Skillify password",
+    html,
+  });
+};
+
+// TICKET CREATION MAIL
+export const sendTicketCreationMail = async (userEmail, ticketId) => {
+  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.5">
+      <h1>Your ticket has been created. </h1> <br />
+      <h3>Ticket ID : ${ticketId}</h3>
+    </div>`;
+
+  await sendMail({
+    to: userEmail,
+    subject: "Role change Ticket",
+    html,
+  });
+};
+
+// ROLE UPGRADE SUCCESS MAIL
+export const sendTicketUpgradeApprovedMail = async (userEmail) => {
+  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.5">
+      <h1>Congratulations! Your role change request change was successful. </h1> <br />
+      <h3>Kindly login again for changes.</h3>
+    </div>`;
+
+  await sendMail({
+    to: userEmail,
+    subject: "Role change Approved",
+    html,
+  });
+};
+
+// ROLE UPGRADE DENIAL MAIL
+export const sendTicketUpgradeRejectedMail = async (userEmail) => {
+  const html = `<div style="font-family: Arial, sans-serif; line-height: 1.5">
+      <h1>Congratulations! Your role change request change was unsuccessful. </h1> <br />
+      <h3>Your request was denied by admin</h3>
+    </div>`;
+
+  await sendMail({
+    to: userEmail,
+    subject: "Role change Rejected",
     html,
   });
 };

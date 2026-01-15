@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes.js";
 import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import ticketRoutes from "./routes/ticketRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDb.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
@@ -41,6 +42,7 @@ app.use("/api/v1/course", courseRoutes);
 app.use("/api/v1/enrollment", enrollmentRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/ticket", ticketRoutes);
 
 app.use(errorMiddleware);
 

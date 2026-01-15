@@ -92,7 +92,11 @@ export const acceptAdminInvite = async (req, res) => {
     await user.save();
 
     //invalidate cache
-    await redis.del(`user:profile:${req.user.userId}`);
+    try {
+      await redis.del(`user:profile:${req.user.userId}`);
+    } catch (error) {
+      console.log("Redis Error", error.message);
+    }
 
     await sendMail({
       to: req.user.email,
