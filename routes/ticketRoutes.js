@@ -14,5 +14,6 @@ router.use(authMiddleware);
 router.post("/create", allowedRoles("student", "instructor"), createTicket);
 router.get("/", allowedRoles("admin"), getTickets);
 router.patch("/:ticketId", allowedRoles("admin"), changeTicket);
+router.get("/my", allowedRoles("student", "instructor"), getMyTicket);
 
 export default router;

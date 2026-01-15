@@ -165,3 +165,20 @@ export const getTickets = async (req, res) => {
     return sendErrorResponse(res, "Unable to get tickets", 500);
   }
 };
+
+// get a ticket this determines if we send a new ticket req or fetch the old one
+export const getMyTicket = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const ticket = await Ticket.findOne({ user: userId });
+
+    if (!ticket) {
+      return sendSuccessResponse(res, { ticket: null }, 200);
+    }
+
+    return sendSuccessResponse(res, { ticket }, 200);
+  } catch (error) {
+    return sendErrorResponse(res, "Unable to fetch ticket", 500);
+  }
+};
