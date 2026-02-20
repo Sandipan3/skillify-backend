@@ -125,7 +125,7 @@ export const changeTicket = async (req, res) => {
     }
 
     return sendSuccessResponse(res, {
-      message: "Role upgraded successfully. Please login again.",
+      message: "Role upgraded successfully",
     });
   } catch (error) {
     return sendErrorResponse(res, "Unable to process ticket", 500);
