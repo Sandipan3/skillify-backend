@@ -173,7 +173,6 @@ export const getMyTicket = async (req, res) => {
 
     const ticket = await Ticket.findOne({
       user: userId,
-      status: "created",
     }).sort({ createdAt: -1 });
 
     if (!ticket) {
