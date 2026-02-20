@@ -52,7 +52,7 @@ export const createTicket = async (req, res) => {
         message: "Your ticket has been created. Wait for admin approval",
         ticket,
       },
-      201
+      201,
     );
   } catch (error) {
     return sendErrorResponse(res, "Unable to create ticket", 500);
@@ -159,7 +159,7 @@ export const getTickets = async (req, res) => {
         totalPages,
         tickets,
       },
-      200
+      200,
     );
   } catch (error) {
     return sendErrorResponse(res, "Unable to get tickets", 500);
@@ -171,7 +171,10 @@ export const getMyTicket = async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    const ticket = await Ticket.findOne({ user: userId });
+    const ticket = await Ticket.findOne({
+      user: userId,
+      status: "created",
+    }).sort({ createdAt: -1 });
 
     if (!ticket) {
       return sendSuccessResponse(res, { ticket: null }, 200);
