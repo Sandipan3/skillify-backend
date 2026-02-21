@@ -20,10 +20,7 @@ const rateLimit = async (req, res, next) => {
 
       return sendErrorResponse(
         res,
-        {
-          message: "Too many requests. Try again later.",
-          retryAfter: ttl,
-        },
+        `Too many requests. Try again after ${ttl}.`,
         429,
       );
     }
