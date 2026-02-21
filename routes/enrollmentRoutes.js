@@ -7,6 +7,7 @@ import {
   getMyEnrollments,
   unenrollCourse,
 } from "../controllers/enrollmentController.js";
+import rateLimit from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
@@ -16,7 +17,12 @@ router.get("/enrollment-count/:id", getEnrollmentCount);
 // PROTECTED STUDENT ROUTES
 router.use(authMiddleware);
 
-router.post("/enroll-free", allowedRoles("student"), enrollInFreeCourse);
+router.post(
+  "/enroll-free",
+  rateLimit,
+  allowedRoles("student"),
+  enrollInFreeCourse,
+);
 
 router.get("/my-enrollments", allowedRoles("student"), getMyEnrollments);
 

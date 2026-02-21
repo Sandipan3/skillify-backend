@@ -15,13 +15,14 @@ import {
 import authMiddleware from "../middlewares/authMiddleware.js";
 import allowedRoles from "../middlewares/roleMiddleware.js";
 import passport from "../middlewares/passport.js";
+import rateLimit from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 // AUTH
-router.post("/register/init", registerInit);
-router.post("/register/verify", verifyRegister);
-router.post("/login", login);
+router.post("/register/init", rateLimit, registerInit);
+router.post("/register/verify", rateLimit, verifyRegister);
+router.post("/login", rateLimit, login);
 router.post("/refresh", refreshToken);
 
 // Logout requires user to be logged in
@@ -38,20 +39,20 @@ router.post("/change-role", authMiddleware, allowedRoles("admin"), changeRole);
 // GOOGLE AUTH
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
 // Callback must come after the Google login URL
 router.get(
   "/google/callback",
   passport.authenticate("google", { session: false }),
-  googleCallback
+  googleCallback,
 );
 
 // Forgot Password
-router.post("/forgot-password", forgotPassword);
+router.post("/forgot-password", rateLimit, forgotPassword);
 
 // Reset Password
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password/:token", rateLimit, resetPassword);
 
 export default router;

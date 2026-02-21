@@ -25,7 +25,7 @@ router.post(
   "/create",
   allowedRoles("instructor"),
   uploadMiddleware,
-  createCourse
+  createCourse,
 );
 
 // GET PAGINATED COURSES
@@ -50,7 +50,7 @@ router.delete("/:id", allowedRoles("instructor"), deleteCourse);
 router.delete(
   "/:courseId/videos/:videoId",
   allowedRoles("instructor"),
-  deleteVideo
+  deleteVideo,
 );
 
 // REPLACE A SINGLE VIDEO
@@ -58,7 +58,7 @@ router.put(
   "/:courseId/videos/:videoId/replace",
   allowedRoles("instructor"),
   uploadMiddleware,
-  replaceVideo
+  replaceVideo,
 );
 
 export default router;

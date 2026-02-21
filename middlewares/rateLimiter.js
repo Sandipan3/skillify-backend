@@ -1,12 +1,38 @@
-import rateLimit from "express-rate-limit";
+import redis from "../config/redis.js";
+import { sendErrorResponse } from "../utils/response.js";
 
-const rateLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 5, //limit each IP to 5 request per windowMs
-  message: {
-    status: "error",
-    message: "Too many login attempts. Please try again later.",
-  },
-});
+const rateLimit = async (req, res, next) => {
+  try {
+    const maxRequests = 5;
+    const windowSeconds = 5 * 60; //5 minutes
 
-export default rateLimiter;
+    const id = req.user?.userId || req.ip;
+    const key = `rate_limit:${id}`;
+
+    const current = await redis.incr(key);
+
+    if (current === 1) {
+      await redis.expire(key, windowSeconds);
+    }
+
+    if (current > maxRequests) {
+      const ttl = await redis.ttl(key);
+
+      return sendErrorResponse(
+        res,
+        {
+          message: "Too many requests. Try again later.",
+          retryAfter: ttl,
+        },
+        429,
+      );
+    }
+
+    next();
+  } catch (error) {
+    console.error("Rate limit error:", error.message);
+    next();
+  }
+};
+
+export default rateLimit;
