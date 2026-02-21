@@ -47,10 +47,14 @@ app.use("/api/v1/ticket", ticketRoutes);
 
 //this is for the github workflow ping server every 10 mins
 app.get("/api/v1/ping", (req, res) => {
-  sendSuccessResponse(res, 200, {
-    status: "Hello I am fine!",
-    timestamp: Date.now(),
-  });
+  sendSuccessResponse(
+    res,
+    {
+      status: "Hello I am fine!",
+      timestamp: Date.now(),
+    },
+    200,
+  );
 });
 
 app.use(errorMiddleware);
