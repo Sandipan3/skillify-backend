@@ -10,6 +10,7 @@ import ticketRoutes from "./routes/ticketRoutes.js";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/connectDb.js";
 import errorMiddleware from "./middlewares/errorMiddleware.js";
+import { sendSuccessResponse } from "./utils/response.js";
 
 // app setup
 const app = express();
@@ -22,7 +23,7 @@ app.use(
   cors({
     origin: [process.env.FRONTEND_URL, "http://localhost:5173"],
     credentials: true,
-  })
+  }),
 );
 //====localhost=====================
 // app.use(
@@ -43,6 +44,14 @@ app.use("/api/v1/enrollment", enrollmentRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/ticket", ticketRoutes);
+
+//this is for the github workflow ping server every 10 mins
+app.get("/api/v1/ping", (req, res) => {
+  sendSuccessResponse(res, 200, {
+    status: "Hello I am fine!",
+    timestamp: Date.now(),
+  });
+});
 
 app.use(errorMiddleware);
 
