@@ -117,7 +117,7 @@ export const sendTicketUpgradeApprovedMail = async (userEmail) => {
 // ROLE UPGRADE DENIAL MAIL
 export const sendTicketUpgradeRejectedMail = async (userEmail) => {
   const html = `<div style="font-family: Arial, sans-serif; line-height: 1.5">
-      <h1>Your role change request change was unsuccessful. </h1> <br />
+      <h1>Your role change request was unsuccessful. </h1> <br />
       <h3>Your request was denied by admin</h3>
     </div>`;
 
