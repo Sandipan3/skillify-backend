@@ -38,7 +38,7 @@ The goal of this backend is to be **secure, scalable, and production‑ready** w
 
 **Email**
 
-- Nodemailer
+- Brevo
 
 **Dev Tools**
 
