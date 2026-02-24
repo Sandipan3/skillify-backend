@@ -124,19 +124,24 @@ http://localhost:5000
 
 ---
 
-## Project Structure (typical)
+## Project Structure
 
 ```
 skillify-backend/
-├── config/
-├── controllers/
-├── middleware/
-├── models/
-├── routes/
-├── utils/
-├── server.js
-├── .env
-└── package.json
+├── config/                 # MongoDB, Redis, Cloudinary and Razorpay configuration setup
+├── controllers/            # Route handlers (business logic entry points)
+├── middlewares/            # Express middlewares (auth, allowed role, rate limit, multer,error handling)
+├── models/                 # Database schemas and models
+├── routes/                 # API route definitions
+├── services/               # Email Service using Brevo
+├── utils/                  # Helper utilities and common functions
+├── app.js                  # Express app configuration
+├── server.js               # Application entry point
+├── LICENSE                 # MIT License
+├── .env.example            # Example environment variables
+├── .gitignore              # Git ignore rules
+├── package.json            # Project metadata and dependencies
+└── package-lock.json       # Dependency lock file
 ```
 
 ---
@@ -152,8 +157,6 @@ skillify-backend/
 
 ## Future Improvements
 
-- Refresh token rotation
-- API documentation (Swagger)
 - Docker support
 - Course progress tracking
 - Payment webhooks

@@ -7,18 +7,12 @@ import {
   getMyTicket,
   getTickets,
 } from "../controllers/ticketController.js";
-import rateLimit from "../middlewares/rateLimiter.js";
 
 const router = express.Router();
 
 router.use(authMiddleware);
 
-router.post(
-  "/create",
-  allowedRoles("student", "instructor"),
-  rateLimit,
-  createTicket,
-);
+router.post("/create", allowedRoles("student", "instructor"), createTicket);
 router.get("/", allowedRoles("admin"), getTickets);
 router.patch("/:ticketId", allowedRoles("admin"), changeTicket);
 router.get("/my", allowedRoles("student", "instructor"), getMyTicket);
